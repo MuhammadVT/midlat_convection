@@ -46,8 +46,9 @@ def cos_fit(ftype="fitacf", azbin_nvel_min=10, naz_min=3, az_span_min=30, baseLo
                 glatc REAL, glonc REAL,\
                 PRIMARY KEY (glatc, glonc))".format(tb1=T1))
 
-    # select the velocity data grouping by latc-lonc bins for the nigh side
-    command = "SELECT count(*), glatc, glonc FROM\
+    # select the velocity data grouping by latc-lonc bins. Also each latc-lonc cell should
+    #contain gazmc bins that have at least azbin_nvel_min amount of measurements
+    command = "SELECT count(*), glatc, glonc, group_concat(gazmc) FROM\
                (SELECT * FROM {tb2} WHERE vel_count >= {azbin_nvel_min})\
                GROUP BY glatc, glonc\
                ".format(tb2=T2, azbin_nvel_min=azbin_nvel_min)
@@ -56,12 +57,27 @@ def cos_fit(ftype="fitacf", azbin_nvel_min=10, naz_min=3, az_span_min=30, baseLo
     cur.execute(command)
     rws = cur.fetchall()
 
-    # filter out lat-lon grid points that have less than 30 degrees azimuthal span
-    #rws = [x for x in rws if (x[3]-x[4]) >= az_span_min]
     # filter out lat-lon grid points that have less than 3 qualifying amimuthal bins 
-    lat = [x[1] for x in rws if x[0] >= naz_min]
-    lon = [x[2] for x in rws if x[0] >= naz_min]
-    azm_count = [x[0] for x in rws if x[0] >= naz_min]
+    rws = [x for x in rws if x[0] >= naz_min]
+
+    # filter out lat-lon grid points that have less than 30 degrees azimuthal span
+    for rwi in rws:
+        az_rwi = np.sort(np.array([int(x) for x in rwi[3].split(",")]))
+        if len(az_rwi) == 3:
+            if az_rwi.tolist()==[5, 345, 355] or az_rwi.tolist()==[5, 15, 355]:
+                #print az_rwi
+                rws.remove(rwi)
+            elif az_rwi.tolist()==[az_rwi[0], az_rwi[0]+10, az_rwi[0]+20]:
+                #print az_rwi
+                rws.remove(rwi)
+            else:
+                continue
+        else:
+            continue
+
+    azm_count = [x[0] for x in rws]
+    lat = [x[1] for x in rws]
+    lon = [x[2] for x in rws]
 
     for ii in xrange(len(lat)):
         command = "SELECT median_vel, vel_count, gazmc FROM {tb2}\
@@ -77,7 +93,6 @@ def cos_fit(ftype="fitacf", azbin_nvel_min=10, naz_min=3, az_span_min=30, baseLo
         azm = np.array([x[2] for x in rows])
 
         # do cosine fitting with weight
-
         fitpars, perrs = cos_curve_fit(azm, median_vel, sigma)
         vel_mag = round(fitpars[0],2)
         vel_dir = round(np.rad2deg(fitpars[1]) % 360,1)
@@ -94,6 +109,7 @@ def cos_fit(ftype="fitacf", azbin_nvel_min=10, naz_min=3, az_span_min=30, baseLo
                     vel_dir_err=vel_dir_err, vel_count=np.sum(vel_count),\
                     gazmc_count =azm_count[ii], glatc=lat[ii], glonc=lon[ii])
         cur.execute(command)
+        print "finish inserting cosfit result at " + str((lat[ii], lon[ii]))
 
     # commit the change
     conn.commit()
@@ -114,8 +130,6 @@ def cos_curve_fit(azms, vels, sigma):
     perrs = np.sqrt(np.diag(covmat)) 
 
     return fitpars, perrs
-
-
 
 def main():
 
