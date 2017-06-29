@@ -24,7 +24,8 @@ class read_file_to_db(object):
         params : list
             NOTE: works for params=["velocity"] only
         ffname : string
-            if ffname is not set to None, ffname will be constructed.
+            Full path of a file to be read. if ffname is not set to None, 
+            ffname will be constructed.
 
         Returns : read_file_to_db object 
             A dict of dicts in the form of {bmnum:dict} that holds a 
@@ -103,10 +104,13 @@ class read_file_to_db(object):
         conn.commit()
 
 def main():
+    """ Call the functions above. Acts as an example code.
+    Multiprocessing has been implemented to do parallel computing"""
     
     import datetime as dt
     import sqlite3
     from month_to_season import get_season_by_month
+    import multiprocessing as mp
 
     # input parameters
     #season = "winter"
