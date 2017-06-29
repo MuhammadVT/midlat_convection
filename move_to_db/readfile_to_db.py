@@ -109,44 +109,24 @@ def main():
     from month_to_season import get_season_by_month
 
     # input parameters
-    #sdate = dt.datetime(2008,9,16)
-    #edate = dt.datetime(2008,9,18)      # includes the whole edate
-    #sdate = dt.datetime(2010,1,14)
-    #edate = dt.datetime(2010,1,16)      # includes the whole edate
-
-    #sdate = dt.datetime(2010,12,31)
-    #edate = dt.datetime(2011,3,1)
-    #sdate = dt.datetime(2011,10,31)
-    #edate = dt.datetime(2012,3,1)
-    #sdate = dt.datetime(2012,10,31)
-    #edate = dt.datetime(2013,1,1)
-
-    #sdate = dt.datetime(2012,4,30)
-    #edate = dt.datetime(2012,9,1)
-
-    #sdate = dt.datetime(2011,2,28)
-    #edate = dt.datetime(2011,5,1)
-    #sdate = dt.datetime(2012,2,29)
-    #edate = dt.datetime(2012,5,1)
-    #sdate = dt.datetime(2012,8,31)
-    #edate = dt.datetime(2012,11,1)
-
     #season = "winter"
     #season = "summer"
     season = "equinox"
 
     # set the time interval for each season
+    #year_0 = 2010; year_1 = 2011; year_2 = 2012; year_3 = 2013
+    year_0 = 2014; year_1 = 2015; year_2 = 2016; year_3 = 2017
     if season == "winter":
-        stms = [dt.datetime(2010,12,31), dt.datetime(2011,10,31), dt.datetime(2012,10,31)]
-        etms = [dt.datetime(2011,3,1), dt.datetime(2012,3,1), dt.datetime(2013,1,1)]
+        stms = [dt.datetime(year_0,12,31), dt.datetime(year_1,10,31), dt.datetime(year_2,10,31)]
+        etms = [dt.datetime(year_1,3,1), dt.datetime(year_2,3,1), dt.datetime(year_3,1,1)]
 
     if season == "summer":
-        stms = [dt.datetime(2011,4,30), dt.datetime(2012,4,30)]
-        etms = [dt.datetime(2011,9,1), dt.datetime(2012,9,1)]
+        stms = [dt.datetime(year_1,4,30), dt.datetime(year_2,4,30)]
+        etms = [dt.datetime(year_1,9,1), dt.datetime(year_2,9,1)]
 
     if season == "equinox":
-        stms = [dt.datetime(2011,2,28), dt.datetime(2011,8,31), dt.datetime(2012,2,29), dt.datetime(2012,8,31)]
-        etms = [dt.datetime(2011,5,1), dt.datetime(2011,11,1), dt.datetime(2012,5,1), dt.datetime(2012,11,1)]
+        stms = [dt.datetime(year_1,2,28), dt.datetime(year_1,8,31), dt.datetime(year_2,2,29), dt.datetime(year_2,8,31)]
+        etms = [dt.datetime(year_1,5,1), dt.datetime(year_1,11,1), dt.datetime(year_2,5,1), dt.datetime(year_2,11,1)]
 
     #rad_list = ["bks", "wal", "fhe", "fhw", "cve", "cvw"]
     #rad_list = ["bks", "wal", "fhe"]
