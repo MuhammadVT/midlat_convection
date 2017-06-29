@@ -1,25 +1,35 @@
-def combine_radars(ftype="fitacf", baseLocation="../data/sqlite3/",
-                   dbName=None):
+def combine_radars(imf_bin, ftype="fitacf", inbaseLocation="./",
+                   outbaseLocation="./", indbName=None, outdbName=None):
     
-    """ combines all the ten-min median filtered radar data into one master table.
-    The results are stored in a different db file.
+    """ combines all the ten-min median filtered radar data into a number of master tables based
+    on the number of imf clock angle bins. That is, one master table for each imf clock angle bin.
+    The results are stored in different db files.
+    
+    parameters
+    ----------
+    imf_bin : list
+        the lower and upper limit of certain imf clock angle bin
     """
     import sqlite3
     import datetime as dt
     import numpy as np 
 
     # make db connection for dopsearch
-    if dbName is None:
-        dbName = "ten_min_median_" + ftype + ".sqlite"
-    conn_ten = sqlite3.connect(baseLocation + dbName)
+    if indbName is None:
+        indbName = "ten_min_median_" + ftype + ".sqlite"
+    conn_ten = sqlite3.connect(inbaseLocation + indbName, detect_types=sqlite3.PARSE_DECLTYPES)
     cur_ten = conn_ten.cursor()
 
     # create a db that combines all the radar data into one master table
-    conn = sqlite3.connect(baseLocation + "master_" + ftype + ".sqlite")
+    if outdbName is None:
+        outdbName = "imf_clock_angle_" + str(imf_bin[0]) + "_to_" + str(imf_bin[1]) +\
+                    "_" + ftype + ".sqlite"
+    conn = sqlite3.connect(outbaseLocation + outdbName, detect_types=sqlite3.PARSE_DECLTYPES)
     cur = conn.cursor()
 
     # attach ten_min_median db into master db
-    cur.execute("ATTACH DATABASE '{db}' as 'rads'".format(db=baseLocation+dbName))
+    cur.execute("ATTACH DATABASE '{db}' as 'rads'".format(db=inbaseLocation+indbName))
+    cur.execute("ATTACH DATABASE '{db}' as 'binned_imf'".format(db="../data/sqlite3/gmi_imf/binned_imf.sqlite"))
 
     # create a table that combines all the radar data into one master table
     T1 = "master"
@@ -36,8 +46,10 @@ def combine_radars(ftype="fitacf", baseLocation="../data/sqlite3/",
         
         # copy data from ten_min_median db into master db
         command = "INSERT INTO {tb1} (vel, glatc, glonc, gazmc)\
-                   SELECT vel, glatc, glonc, gazmc FROM {tb2}"\
-                   .format(tb1=T1, tb2="rads."+tbl)
+                   SELECT vel, glatc, glonc, gazmc FROM {tb2}\
+                   WHERE datetime IN (SELECT datetime FROM {tb3})\
+                   ".format(tb1=T1, tb2="rads."+tbl,\
+                   tb3="binned_imf."+"b"+str(imf_bin[0]) + "_b" + str(imf_bin[1]))
         cur.execute(command)
 
     # commit the change
@@ -45,6 +57,7 @@ def combine_radars(ftype="fitacf", baseLocation="../data/sqlite3/",
 
     # detach ten_min_median db from master db
     cur.execute("DETACH DATABASE 'rads'")
+    cur.execute("DETACH DATABASE 'binned_imf'")
 
     # close db connections
     conn_ten.close()
@@ -52,8 +65,7 @@ def combine_radars(ftype="fitacf", baseLocation="../data/sqlite3/",
 
     return
 
-def master_summary(ftype="fitacf", baseLocation="../data/sqlite3/",
-                   dbName=None):
+def master_summary(imf_bin, ftype="fitacf", baseLocation="./", dbName=None):
     
     """ stores the summay of the master table into a different table in the same database.
     """
@@ -63,10 +75,10 @@ def master_summary(ftype="fitacf", baseLocation="../data/sqlite3/",
 
     # make db connection for dopsearch
     if dbName is None:
-        dbName = "master_" + ftype + ".sqlite"
+        dbName = "imf_clock_angle_" + str(imf_bin[0]) + "_to_" + str(imf_bin[1]) + "_" + ftype + ".sqlite"
 
     # create a db that summarizes the data in the master table
-    conn = sqlite3.connect(baseLocation + dbName)
+    conn = sqlite3.connect(baseLocation + dbName, detect_types=sqlite3.PARSE_DECLTYPES)
     cur = conn.cursor()
     
     # create a summary table
@@ -100,7 +112,6 @@ def master_summary(ftype="fitacf", baseLocation="../data/sqlite3/",
         command = "UPDATE {tb} SET median_vel={median_vel}\
                   WHERE rowid=={rwid}".format(tb=T2, median_vel=median_vel, rwid=rwid)
         cur.execute(command)
-        print ii
 
     # commit the change
     conn.commit()
@@ -110,21 +121,23 @@ def master_summary(ftype="fitacf", baseLocation="../data/sqlite3/",
 
     return
 
-def worker(baseLocation):
+def worker(imf_bins, inbaseLocation, outbaseLocation):
 
     import datetime as dt
 
     # input parameters
     ftype = "fitacf"
     #ftype = "fitex"
-            
-    # combine the all the radars' data into one master table 
-    combine_radars(ftype=ftype, baseLocation=baseLocation, dbName=None)
-    print "created the master table"
 
-    # build a summary table of the master table
-    master_summary(ftype=ftype, baseLocation=baseLocation, dbName=None)
-    print "created the master_summary table"
+    for imf_bin in imf_bins: 
+        # combine the all the radars' data into one master table 
+        combine_radars(imf_bin, ftype=ftype, inbaseLocation=inbaseLocation,
+                       outbaseLocation=outbaseLocation, indbName=None, outdbName=None)
+        print "created the master table for bin ", imf_bin
+
+        # build a summary table of the master table
+        master_summary(imf_bin, ftype=ftype, baseLocation=outbaseLocation, dbName=None)
+        print "created the master_summary table"
 
 
     return
@@ -132,15 +145,18 @@ if __name__ == "__main__":
     import multiprocessing
 
     seasons = ["winter", "summer", "equinox"]
+    #seasons = ["winter"]
+    #imf_bins = [[65, 115], [245, 295]]
+    #imf_bins = [[335, 25], [155, 205]]
+    imf_bins = [[330, 30], [150, 210]]
+    #imf_bins = [[60, 120], [240, 300]]
+
+
     jobs = []
     for season in seasons:
-        #baseLocation="../data/sqlite3/" + season + "/kp_l_3/" + "data_in_mlt" + "/"
-        #baseLocation="../data/sqlite3/" + season + "/kp_l_3/" + "data_in_geo" + "/"
-        #baseLocation="../data/sqlite3/" + season + "/kp_l_2/" + "data_in_geo" + "/"
-        #baseLocation="../data/sqlite3/" + season + "/kp_l_2/" + "data_in_geo" + "/"
-        baseLocation="../data/sqlite3/" + season + "/kp_l_1/" + "data_in_mlt" + "/"
-        #baseLocation="../data/sqlite3/" + season + "/kp_l_1/" + "data_in_geo" + "/"
-        p = multiprocessing.Process(target=worker, args=(baseLocation,))
+        inbaseLocation="../data/sqlite3/" + season + "/kp_l_3/" + "data_in_mlt" + "/"
+        outbaseLocation=inbaseLocation + "binned_by_imf_clock_angle" + "/"
+        p = multiprocessing.Process(target=worker, args=(imf_bins, inbaseLocation, outbaseLocation))
         jobs.append(p)
         p.start()
 

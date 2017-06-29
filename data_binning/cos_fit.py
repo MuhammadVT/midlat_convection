@@ -1,5 +1,5 @@
-def cos_fit(ftype="fitacf", azbin_nvel_min=10, naz_min=3, az_span_min=30, baseLocation="../data/sqlite3/",
-                   dbName=None):
+def cos_fit(ftype="fitacf", azbin_nvel_min=10, naz_min=3, az_span_min=30, baseLocation="./",
+                   dbName=None, sqrt_weighting=True):
     
     """ Do the cosine fitting to the LOS data, and store the results in a different table
     named "master_cosfit". This table only have qualifying latc-lonc grid points
@@ -12,6 +12,10 @@ def cos_fit(ftype="fitacf", azbin_nvel_min=10, naz_min=3, az_span_min=30, baseLo
         naz_min number of qualifying azimuthal bins
     az_span_min : int
         minimum azimuhtal span a grid cell should have to be qualified for cosfitting.
+    sqrt_weighting : bool
+        if set to True, the fitting is weighted by the number of points at each azimuthal bin
+        if set to False, then all azimuthal bins are equla regardless of the nubmer of points
+        they contain.
     
     """
     import sqlite3
@@ -23,8 +27,13 @@ def cos_fit(ftype="fitacf", azbin_nvel_min=10, naz_min=3, az_span_min=30, baseLo
         dbName = "master_" + ftype + ".sqlite"
     conn = sqlite3.connect(baseLocation + dbName)
     cur = conn.cursor()
+
+    if sqrt_weighting:
+        T1 = "master_cosfit"
+    else:
+        T1 = "master_cosfit_equal_weighting"
     
-    T1 = "master_cosfit"
+    #T1 = "master_cosfit"
     T2 = "master_summary"
 
 #    # build a new master table where we store the cosfitted velocities at each lat-lon grid points
@@ -89,7 +98,10 @@ def cos_fit(ftype="fitacf", azbin_nvel_min=10, naz_min=3, az_span_min=30, baseLo
         rows = cur.fetchall()
         median_vel = np.array([x[0] for x in rows])
         vel_count = np.array([x[1] for x in rows])
-        sigma =  1./np.sqrt(vel_count)
+        if sqrt_weighting:
+            sigma =  1./np.sqrt(vel_count)
+        else:
+            sigma =  np.array([1.0 for x in rows])
         azm = np.array([x[2] for x in rows])
 
         # do cosine fitting with weight
@@ -131,7 +143,7 @@ def cos_curve_fit(azms, vels, sigma):
 
     return fitpars, perrs
 
-def main():
+def worker(baseLocation, dbName):
 
     import datetime as dt
 
@@ -142,17 +154,77 @@ def main():
 
     ftype = "fitacf"
     #ftype = "fitex"
-
-    season = "winter"
-    baseLocation="../data/sqlite3/" + season + "/"
-    
+    sqrt_weighting=False
     # do the cosine fitting to the grid velocities
     print "doing cosine fitting to each of the grid cell velocities"
     cos_fit(ftype=ftype, azbin_nvel_min=azbin_nvel_min, naz_min=naz_min,
-            az_span_min=az_span_min, baseLocation=baseLocation, dbName=None)
+            az_span_min=az_span_min, baseLocation=baseLocation,
+            dbName=dbName, sqrt_weighting=sqrt_weighting)
     print "finished cosine fitting"
 
 
     return
 if __name__ == "__main__":
-    main()
+
+    import multiprocessing
+    
+    ftype = "fitacf"
+    #seasons = ["winter", "summer", "equinox"]
+    seasons = ["winter"]
+    binned_season = True
+    binned_F107 = False
+    binned_imf = False
+
+    # list of dbNames to be cosine fitted
+    if binned_season:
+        dbName_list = [None]
+
+
+    if binned_F107:
+        dbName_list = []
+        #f107_bins = [[0, 100], [100, 175], [175, 500]]
+        #f107_bins = [[0, 100], [100, 150], [150, 500]]
+        #f107_bins = [[0, 105], [105, 125], [125, 500]]
+        #f107_bins = [[0, 110], [110, 500]]
+        #f107_bins = [[0, 120], [120, 500]]
+        #f107_bins = [[140, 500]]
+        f107_bins = [[0, 95], [105, 130], [140, 500]]
+        db_prefix = "f107_"
+        for f107_bin in f107_bins:
+            dbName = db_prefix + str(f107_bin[0]) + "_to_" + str(f107_bin[1]) +\
+                                        "_" + ftype + ".sqlite"
+            dbName_list.append(dbName)
+
+
+    if binned_imf:
+        dbName_list = []
+        #imf_clock_angle_bins = [[65, 115], [245, 295]] 
+        #imf_clock_angle_bins = [[335, 25], [155, 205]]
+        imf_clock_angle_bins = [[330, 30], [150, 210]]
+        #imf_clock_angle_bins = [[60, 120], [240, 300]] 
+
+        bins = imf_clock_angle_bins
+        db_prefix = "imf_clock_angle_"
+        for bn in bins:
+            dbName = db_prefix + str(bn[0]) + "_to_" + str(bn[1]) +\
+                                        "_" + ftype + ".sqlite"
+            dbName_list.append(dbName)
+
+    jobs = []
+    for season in seasons:
+        if binned_F107:
+            baseLocation="../data/sqlite3/" + season + "/kp_l_3/" + "data_in_mlt" + "/binned_by_f107/"
+        if binned_imf:
+            baseLocation="../data/sqlite3/" + season + "/kp_l_3/" + "data_in_mlt" + "/binned_by_imf_clock_angle/"
+        if binned_season:
+            baseLocation="../data/sqlite3/" + season + "/kp_l_3/" + "data_in_mlt" + "/"
+        #baseLocation="../data/sqlite3/" + season + "/kp_l_3/" + "data_in_mlt" + "/"
+        #baseLocation="../data/sqlite3/" + season + "/kp_l_3/" + "data_in_geo" + "/"
+        #baseLocation="../data/sqlite3/" + season + "/kp_l_2/" + "data_in_geo" + "/"
+        #baseLocation="../data/sqlite3/" + season + "/kp_l_1/" + "data_in_mlt" + "/"
+        #baseLocation="../data/sqlite3/" + season + "/kp_l_1/" + "data_in_geo" + "/"
+        for dbName in dbName_list:
+            p = multiprocessing.Process(target=worker, args=(baseLocation, dbName))
+            jobs.append(p)
+            p.start()
+
