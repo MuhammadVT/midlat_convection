@@ -7,15 +7,22 @@ Muhamamd
 import pdb
 
 class read_file_to_db(object):
+    """ A class that holds the boxcar filtered data. """
 
     def __init__(self, rad, ctr_date, ftype="fitacf", params=["velocity"], ffname=None):
 
-        """ A class that holds the boxcar filtered data.
-        
+        """ 
+        Parameters
+        ----------
+
+        rad : str
+            Three-letter code for a rad
         ctr_date : datetime.datetime
             a full day for which data are to be read. 
+        ftype : str
+            SuperDARN file type. Valid inputs are "fitacf", "fitex"
         params : list
-            works for params=["velocity"] only
+            NOTE: works for params=["velocity"] only
         ffname : string
             if ffname is not set to None, ffname will be constructed.
 
@@ -40,6 +47,7 @@ class read_file_to_db(object):
 
         # collect the data 
         stm = self.ctr_date
+
         # add two minute to the etm to read the last record from
         # the boxcar filtered concatenated fitacf(ex) files
         etm = self.ctr_date + dt.timedelta(days=1) + dt.timedelta(minutes=2)
@@ -73,10 +81,6 @@ class read_file_to_db(object):
         for bmnum in self.data.keys():
             data_dict = self.data[bmnum]
             table_name = self.rad + "_bm" + str(bmnum)
-#            command = "CREATE TABLE IF NOT EXISTS {tb} (\
-#                      vel BLOB, rsep REAL, frang REAL, bmazm REAL,\
-#                      slist BLOB, gsflg BLOB,\
-#                      datetime TIMESTAMP PRIMARY KEY)".format(tb=table_name)
             command = "CREATE TABLE IF NOT EXISTS {tb} (\
                       vel TEXT, rsep REAL, frang REAL, bmazm REAL,\
                       slist TEXT, gsflg TEXT,\
@@ -87,11 +91,6 @@ class read_file_to_db(object):
                 command = "INSERT OR IGNORE INTO {tb} (vel, rsep, frang, bmazm,\
                             slist, gsflg, datetime) VALUES (?, ?, ?, ?, ?, ?, ?)"\
                             .format(tb=table_name)
-#                cur.execute(command, (sqlite3.Binary(json.dumps(data_dict["vel"][i])), data_dict["rsep"][i],
-#                            data_dict["frang"][i], data_dict["bmazm"][i],
-#                            sqlite3.Binary(json.dumps(data_dict["slist"][i])),
-#                            sqlite3.Binary(json.dumps(data_dict["gsflg"][i])),\
-#                            data_dict["datetime"][i]))
 
                 cur.execute(command, (json.dumps(data_dict["vel"][i]), data_dict["rsep"][i],
                             data_dict["frang"][i], data_dict["bmazm"][i],
