@@ -118,8 +118,10 @@ def main():
     season = "equinox"
 
     # set the time interval for each season
-    #year_0 = 2010; year_1 = 2011; year_2 = 2012; year_3 = 2013
+    # NOTE: The code processes two years (full years specified by year_1 and year_2) of 
+    #data at a time.
     year_0 = 2014; year_1 = 2015; year_2 = 2016; year_3 = 2017
+    #year_0 = 2010; year_1 = 2011; year_2 = 2012; year_3 = 2013
     if season == "winter":
         stms = [dt.datetime(year_0,12,31), dt.datetime(year_1,10,31), dt.datetime(year_2,10,31)]
         etms = [dt.datetime(year_1,3,1), dt.datetime(year_2,3,1), dt.datetime(year_3,1,1)]
@@ -132,6 +134,7 @@ def main():
         stms = [dt.datetime(year_1,2,28), dt.datetime(year_1,8,31), dt.datetime(year_2,2,29), dt.datetime(year_2,8,31)]
         etms = [dt.datetime(year_1,5,1), dt.datetime(year_1,11,1), dt.datetime(year_2,5,1), dt.datetime(year_2,11,1)]
 
+    # run the code for the following radars in parallel
     #rad_list = ["bks", "wal", "fhe", "fhw", "cve", "cvw"]
     #rad_list = ["bks", "wal", "fhe"]
     #rad_list = ["fhw", "cve", "cvw"]
