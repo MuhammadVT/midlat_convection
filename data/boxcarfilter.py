@@ -1,8 +1,3 @@
-""" fetches, concatenates and does boxcar median filtering to SuperDARN LOS data.
-Multiprocessing is implemented in the code, where a day of data from a radar is defined as 
-a process.
-"""
-
 # load modules
 import sys
 sys.path.append("../dopsearch_py")
@@ -16,8 +11,11 @@ import logging
 #davitpy.rcParams['verbosity'] = "debug"
 
 def do_boxcarfiltering(sctr_day, ectr_day, rad_list, ftype, channel, n_jobs=None):
-    """ does boxcar median filtering for data in the time iterval between sctr_day,
-    ectr_day for a given radar. 
+
+    """ fetches, concatenates and does boxcar median filtering for data
+    in the time iterval between sctr_day, ectr_day for a given radar.
+    Multiprocessing is implemented in the code,
+    where a day of data from a radar is defined as a process.
 
     Parameters
     ----------
