@@ -8,5 +8,5 @@ The radars are, from west to east, Christmas Valley West, Christmas Valley East 
 Fort Hays West, Fort Hays East (Kansas),
 Blackstone, and Wallops Island (Virginia).
 
-** NOTE ** : Data used for this research is not included
-due to its large size.
+** NOTE ** : The data used for this research are not included in this repo
+due to their large size.
