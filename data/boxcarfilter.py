@@ -10,7 +10,8 @@ import multiprocessing as mp
 import logging
 #davitpy.rcParams['verbosity'] = "debug"
 
-def do_boxcarfiltering(sctr_day, ectr_day, rad_list, ftype, channel, n_jobs=None):
+def do_boxcarfiltering(sctr_day, ectr_day, rad_list, ftype,
+                       channel, n_jobs=None, oneday_file_only=True):
 
     """ fetches, concatenates and does boxcar median filtering for data
     in the time iterval between sctr_day, ectr_day for a given radar.
@@ -32,6 +33,10 @@ def do_boxcarfiltering(sctr_day, ectr_day, rad_list, ftype, channel, n_jobs=None
     n_jobs : int or None
         Number of jobs that run in parallel.
         Default to None, in which case all the CPUs but one will used.
+    oneday_file_only : bool, default to True
+        If set to True, boxcarfiltering will be performed for only
+        one day worth of file. If set to False then three days of data
+        centered on a day of interest will be processed through boxcarfiltering.
 
     Return
     ------
@@ -89,7 +94,9 @@ def do_boxcarfiltering(sctr_day, ectr_day, rad_list, ftype, channel, n_jobs=None
                 procs = []
                 # send jobs in parallel
                 for j, ctr_dtm in enumerate(dts_tmp):
-                   p = mp.Process(target=worker, args=(rad, ctr_dtm, ftype, channel, tmp_dirs[j]))
+                   p = mp.Process(target=worker,
+                                  args=(rad, ctr_dtm, ftype, channel,
+                                        tmp_dirs[j], oneday_file_only))
                    procs.append(p)
                    p.start()
 
@@ -107,7 +114,8 @@ def do_boxcarfiltering(sctr_day, ectr_day, rad_list, ftype, channel, n_jobs=None
 
     return
 
-def worker(rad, ctr_dtm, ftype, channel, tmp_dir):
+def worker(rad, ctr_dtm, ftype, channel, tmp_dir,
+           oneday_file_only=True):
     """ A worker function fetches a one day worthy of data, 
     concatenate them and do boxcar median filtering.
     
@@ -122,6 +130,10 @@ def worker(rad, ctr_dtm, ftype, channel, tmp_dir):
         radar channel. e.g., "a", "b", "c", "d", or "." which is all.
     tmp_dir : str
         temprory folder to store the processed data
+    oneday_file_only : bool, default to True
+        If set to True, boxcarfiltering will be performed for only
+        one day worth of file. If set to False then three days of data
+        centered on a day of interest will be processed through boxcarfiltering.
 
     Return
     ------
@@ -138,7 +150,7 @@ def worker(rad, ctr_dtm, ftype, channel, tmp_dir):
                 '{date}.{hour}......{radar}.{ftype}']
 
     ffname = prepare_file(ctr_dtm, localdirfmt, localdict, tmp_dir,
-                          fnamefmt, oneday_file_only=True)
+                          fnamefmt, oneday_file_only=oneday_file_only)
     print "end boxcarfiltering for data on ", ctr_dtm
     print "generated ", ffname
 
