@@ -179,8 +179,8 @@ def main(by_season=True, by_f107=False, by_imf_clock_angle=False):
 
     # input parameters
     #nvel_min=250
-    nvel_min=300
-    #nvel_min=50
+    #nvel_min=300
+    nvel_min=50
     lat_range=[52, 59]
     #lat_range=[50, 90]
     #lat_range=[50, 70]
@@ -295,11 +295,14 @@ def main(by_season=True, by_f107=False, by_imf_clock_angle=False):
         #bins = [[335, 25], [155, 205]]
 
         #bins = [[330, 30], [150, 210]]
-        #bins_txt = ["Bz+", "Bz-"]
-        #fig_txt =  "_convection_by_imf_Bz_clock_angle_lat"
-        bins = [[60, 120], [240, 300]] 
-        bins_txt = ["By+", "By-"]
-        fig_txt =  "_convection_by_imf_By_clock_angle_lat"
+        #bins = [[315, 45], [135, 225]]
+        bins = [[300, 60], [120, 240]]
+        bins_txt = ["Bz+", "Bz-"]
+        fig_txt =  "_span120_convection_by_imf_Bz_clock_angle_lat_"
+
+#        bins = [[60, 120], [240, 300]] 
+#        bins_txt = ["By+", "By-"]
+#        fig_txt =  "_convection_by_imf_By_clock_angle_lat"
 
         for season in seasons:
 
@@ -342,7 +345,7 @@ def main(by_season=True, by_f107=False, by_imf_clock_angle=False):
     return
 
 if __name__ == "__main__":
-    by_season=True
+    by_season=False
     by_f107=False
-    by_imf_clock_angle=False
+    by_imf_clock_angle=True
     main(by_season=by_season, by_f107=by_f107, by_imf_clock_angle=by_imf_clock_angle)
