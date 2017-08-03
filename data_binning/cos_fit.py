@@ -154,7 +154,7 @@ def worker(baseLocation, dbName):
 
     ftype = "fitacf"
     #ftype = "fitex"
-    sqrt_weighting=False
+    sqrt_weighting=True
     # do the cosine fitting to the grid velocities
     print "doing cosine fitting to each of the grid cell velocities"
     cos_fit(ftype=ftype, azbin_nvel_min=azbin_nvel_min, naz_min=naz_min,
@@ -169,11 +169,11 @@ if __name__ == "__main__":
     import multiprocessing
     
     ftype = "fitacf"
-    #seasons = ["winter", "summer", "equinox"]
-    seasons = ["winter"]
-    binned_season = True
+    seasons = ["winter", "summer", "equinox"]
+    #seasons = ["winter"]
+    binned_season = False
     binned_F107 = False
-    binned_imf = False
+    binned_imf = True
 
     # list of dbNames to be cosine fitted
     if binned_season:
@@ -200,8 +200,10 @@ if __name__ == "__main__":
         dbName_list = []
         #imf_clock_angle_bins = [[65, 115], [245, 295]] 
         #imf_clock_angle_bins = [[335, 25], [155, 205]]
-        imf_clock_angle_bins = [[330, 30], [150, 210]]
+        #imf_clock_angle_bins = [[330, 30], [150, 210]]
         #imf_clock_angle_bins = [[60, 120], [240, 300]] 
+        #imf_clock_angle_bins = [[315, 45], [135, 225]]
+        imf_clock_angle_bins = [[300, 60], [120, 240]]
 
         bins = imf_clock_angle_bins
         db_prefix = "imf_clock_angle_"
@@ -227,4 +229,7 @@ if __name__ == "__main__":
             p = multiprocessing.Process(target=worker, args=(baseLocation, dbName))
             jobs.append(p)
             p.start()
+
+        for p in jobs:
+            p.join()
 

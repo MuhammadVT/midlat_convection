@@ -148,8 +148,11 @@ if __name__ == "__main__":
     #seasons = ["winter"]
     #imf_bins = [[65, 115], [245, 295]]
     #imf_bins = [[335, 25], [155, 205]]
-    imf_bins = [[330, 30], [150, 210]]
+    #imf_bins = [[330, 30], [150, 210]]
     #imf_bins = [[60, 120], [240, 300]]
+
+    #imf_bins = [[315, 45], [135, 225]]
+    imf_bins = [[300, 60], [120, 240]]
 
 
     jobs = []
@@ -159,4 +162,7 @@ if __name__ == "__main__":
         p = multiprocessing.Process(target=worker, args=(imf_bins, inbaseLocation, outbaseLocation))
         jobs.append(p)
         p.start()
+    
+    for p in jobs:
+        p.join()
 
