@@ -39,7 +39,9 @@ class gmi_imf_binning(object):
             #bins = [[65, 115], [245, 295]]
             #bins = [[60, 120], [240, 300]]
             #bins = [[-25, 25], [155, 205]]
-            bins = [[-30, 30], [150, 210]]
+            #bins = [[-30, 30], [150, 210]]
+
+            bins = [[-60, 60], [120, 240]]
 
             before_mins = 20
             after_mins = 10
@@ -280,20 +282,20 @@ def main():
     # create an object
     gmi = gmi_imf_binning(stm, etm, indbName=indbName, baseLocation=baseLocation)
 
-    # bin F107 
-    print "binning F107 to db"
-    #bins=[[0,105], [105, 130], [130, 500]]
-    #bins=[[0,105], [105, 125], [125, 500]]
-    #bins=[[0,110], [110, 500]]
-    #bins=[[0,120], [120, 500]]
-    bins=[[140,500]]
-    gmi.bin_f107("binned_f107.sqlite", bins=bins)
-    print "done"
-
-#    # bin IMF clock angle 
-#    print "binning IMF"
-#    gmi.bin_imf("binned_imf.sqlite", bin_by_clock_angle=True)
+#    # bin F107 
+#    print "binning F107 to db"
+#    #bins=[[0,105], [105, 130], [130, 500]]
+#    #bins=[[0,105], [105, 125], [125, 500]]
+#    #bins=[[0,110], [110, 500]]
+#    #bins=[[0,120], [120, 500]]
+#    bins=[[140,500]]
+#    gmi.bin_f107("binned_f107.sqlite", bins=bins)
 #    print "done"
+
+    # bin IMF clock angle 
+    print "binning IMF"
+    gmi.bin_imf("binned_imf.sqlite", bin_by_clock_angle=True)
+    print "done"
 
 
 if __name__ == "__main__":
