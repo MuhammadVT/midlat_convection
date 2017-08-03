@@ -101,9 +101,10 @@ def main(by_season=True, by_f107=False, by_imf_clock_angle=False):
 
     # input parameters
     #nvel_min=50
-    nvel_min=300
-    #lat_range=[52, 59]
-    lat_range=[52, 65]
+    #nvel_min=300
+    nvel_min=100
+    lat_range=[52, 59]
+    #lat_range=[52, 65]
     lat_min = 50
     #lat_range=[40, 60]
     #lat_min = 43
@@ -218,8 +219,9 @@ def main(by_season=True, by_f107=False, by_imf_clock_angle=False):
     if by_imf_clock_angle:
         
         # imf clock angle bins
-        bins = [[65, 115], [245, 295]] 
-
+        #bins = [[65, 115], [245, 295]] 
+        bins = [[300, 60], [120, 240]]
+        bins_txt = ["Bz+", "Bz-"]
         for season in seasons:
 
             # create subplots
@@ -229,7 +231,7 @@ def main(by_season=True, by_f107=False, by_imf_clock_angle=False):
                 axes = [axes]
 
             fig_dir = "./plots/cosfit_plot/kp_l_3/data_in_mlt/binned_by_imf_clock_angle/"
-            fig_name = season + "_binned_by_imf_By_clock_angle_cosfit_quality_" + err_type + "_" + str(lat_range[0]) +"_to_lat" + str(lat_range[1])
+            fig_name = season + "_binned_by_imf_Bz_clock_angle_cosfit_quality_" + err_type + "_" + str(lat_range[0]) +"_to_lat" + str(lat_range[1])
 
             # fetches the data from db 
             baseLocation="../data/sqlite3/" + season + '/kp_l_3/data_in_mlt/binned_by_imf_clock_angle/'
@@ -244,8 +246,9 @@ def main(by_season=True, by_f107=False, by_imf_clock_angle=False):
                                 dbName=dbName)
 
                 # plot the flow vectors
-                title = "Fitting Quality, " + season[0].upper()+season[1:] + ", Kp<3" + \
-                        r", $\theta$=" + str(bn)
+                title = "Fitting Quality, " + season[0].upper()+season[1:] +\
+                        r", Kp $\leq$ 2+"  + ", IMF " + bins_txt[i]
+                        #r", $\theta$=" + str(bn)
                 coll = cosfit_error(axes[i], data_dict, cmap, bounds, err_type=err_type,
                                     lat_min=lat_min, title=title)
             # add colorbar
@@ -258,16 +261,16 @@ def main(by_season=True, by_f107=False, by_imf_clock_angle=False):
             add_cbar(fig, coll, bounds, cax=cbar_ax, label=cbar_label)
 
             # save the fig
-            fig.savefig(fig_dir + fig_name + ".png", dpi=300)
-            #plt.show()
+            #fig.savefig(fig_dir + fig_name + ".png", dpi=300)
+            plt.show()
 
 
 
     return
 
 if __name__ == "__main__":
-    by_season=True
+    by_season=False
     by_f107=False
-    by_imf_clock_angle=False
+    by_imf_clock_angle=True
 
     main(by_season=by_season, by_f107=by_f107, by_imf_clock_angle=by_imf_clock_angle)
